@@ -1,7 +1,7 @@
 extern crate getopts;
 
 
-use getopts::{optopt, optflag, getopts, OptGroup};
+use getopts::{optopt, optflag, getopts, reqopt, OptGroup};
 use std::uint;
 use std::os;
 
@@ -16,6 +16,8 @@ static BREIF_USAGE:&'static str = "[Options]";
 
 
 pub struct Settings {
+    pub input_dev: String,
+    pub output_dev: String,
     pub front_url: String,
     pub port: uint
 }
@@ -37,8 +39,10 @@ pub fn parse_args() -> Option<Settings> {
     let args: Vec<String> = os::args();
 
     let opts = [
-        optopt("f", "front", "front server url", "FRONT"),
-        optopt("p", "port", "port to listen to", "PORT"),
+        reqopt("i", "if", "an input network interface", "[DEV]"),
+        reqopt("o", "of", "an output network interface", "[DEV]"),
+        optopt("f", "front", "a URL to blumenplace`s front server", "[URL]"),
+        optopt("p", "port", "a port number", "[PORT]"),
         optflag("h", "help", "print this help menu")
     ];
 
@@ -54,6 +58,10 @@ pub fn parse_args() -> Option<Settings> {
         print_help(opts);
         return None
     }
+
+    let input_dev: String = matches.opt_str("i").unwrap();
+
+    let output_dev: String = matches.opt_str("o").unwrap();
 
     let front_url: String = match matches.opt_str("f") {
         Some(front_url_value) => { front_url_value }
@@ -71,6 +79,8 @@ pub fn parse_args() -> Option<Settings> {
     };
 
     return Some(Settings {
+        input_dev: input_dev,
+        output_dev: output_dev,
         front_url: front_url,
         port: port
     });
