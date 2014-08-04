@@ -1,3 +1,3 @@
 all:
-	rustc ./src/main.rs -g
+	rustc ./src/main.rs -o ./blumenplace-border
 
