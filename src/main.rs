@@ -1,5 +1,5 @@
 
-#![crate_id = "blumenplace-border#0.0.1"]
+#![crate_name = "blumenplace-border"]
 #![crate_type = "bin"]
 
 #![desc = "blumenplace-border application"]
