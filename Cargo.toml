@@ -1,0 +1,12 @@
+[package]
+name = "blumenplace-border"
+version = "0.0.1"
+authors = [ "Alexey Anisimov <zolkko@gmail.com>" ]
+
+[[bin]]
+name = "blumenplace-border"
+path = "src/main.rs"
+
+[dependencies.teepee]
+git = "https://github.com/teepee/teepee"
+
