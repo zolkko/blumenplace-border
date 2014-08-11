@@ -9,13 +9,22 @@
 #![feature(phase)]
 #[phase(plugin, link)] extern crate log;
 extern crate getopts;
+extern crate url;
+extern crate http;
 
 
 use std::io::signal;
+use std::io::println;
 use std::sync::Arc;
+
+use http::method::Get;
+use http::client::RequestWriter;
 
 
 mod settings;
+
+
+static FRONT_SERVER_NAME: &'static str = "blumenplace-front server";
 
 
 fn udp_service(shared_settings: Arc<settings::Settings>) -> () {
@@ -26,9 +35,26 @@ fn udp_service(shared_settings: Arc<settings::Settings>) -> () {
 
 
 fn http_service(shared_settings: Arc<settings::Settings>) -> () {
-    info!("HTTP RESTFull client starting. Blumenplace url service is located at \"{}\" url.", shared_settings.front_url);
+    let url = shared_settings.front_url.clone();
+    info!("Connecting to {} \"{}\".", FRONT_SERVER_NAME, shared_settings.front_url);
 
-    info!("HTTP RESTFull client finished.");
+    let request: RequestWriter = match RequestWriter::new(Get, url) {
+        Ok(r) => r,
+        Err(error) => fail!("Failed to create request to {} \"{}\". Reason: {}", FRONT_SERVER_NAME, shared_settings.front_url, error)
+    };
+    info!("Request to {} \"{}\" has been successfully created.", FRONT_SERVER_NAME, shared_settings.front_url);
+
+    let mut response = match request.read_response() {
+        Ok(response) => response,
+        Err((_request, error)) => fail!("Failed to read response from {} \"{}\". Reason: {}.", FRONT_SERVER_NAME, shared_settings.front_url, error)
+    };
+    info!("The response from {} \"{}\" has been created.", FRONT_SERVER_NAME, shared_settings.front_url);
+
+    let body = match response.read_to_end() {
+        Ok(body) => body,
+        Err(err) => fail!("Reading response failed: {}", err),
+    };
+    println(std::str::from_utf8(body.as_slice()).expect("Failed to decode response. utf-8 encoding expected."));
 }
 
 
@@ -47,13 +73,13 @@ fn run_app(settings: settings::Settings) -> () {
 
     match listener.register(signal::Interrupt) {
         Err(err) => error!("Failed to register {} listener. Reason: {}.", signal::Interrupt, err),
-        _ => {}
+        _ => (),
     };
 
     loop {
         match listener.rx.recv() {
             signal::Interrupt => break,
-            _ => ()
+            _ => (),
         }
     }
 
@@ -64,8 +90,8 @@ fn run_app(settings: settings::Settings) -> () {
 fn main () -> () {
     info!("Application initialized.");
     match settings::parse_args() {
-        Some(settings) => { run_app(settings); }
-        None => { }
+        Some(settings) => run_app(settings),
+        None => (),
     }
     info!("Application finished");
 }
